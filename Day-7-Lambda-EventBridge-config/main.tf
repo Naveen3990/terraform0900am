@@ -38,9 +38,9 @@ resource "aws_iam_role_policy_attachment" "lambda_logging" {
 # 4️⃣ Create EventBridge rule (schedule)
 resource "aws_cloudwatch_event_rule" "every_five_minutes" {
   name                = "every-five-minutes"
-  description         = "Trigger Lambda every 5 minutes"
+  description         = "Trigger Lambda every 10 minutes"
 #   schedule_expression = "rate(5 minutes)"
-  schedule_expression = "cron(0/5 * * * ? *)"
+  schedule_expression = "cron(0/10 * * * ? *)"
 
 }
 
