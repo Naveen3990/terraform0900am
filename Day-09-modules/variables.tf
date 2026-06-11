@@ -2,7 +2,7 @@ variable "name" {
   type = string
 }
 
-variable "ami_idd" {
+variable "ami_id" {
   type = string
 }
 
