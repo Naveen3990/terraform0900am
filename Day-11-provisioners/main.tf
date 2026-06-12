@@ -1,8 +1,7 @@
-
 # Key Pair
 resource "aws_key_pair" "example" {
   key_name   = "task"
-  public_key = file("~/.ssh/id_ed25519.pub")
+  public_key = file("C:/Users/nvn/.ssh/id_ed25519.pub")
 }
 
 # VPC
@@ -43,7 +42,7 @@ resource "aws_route_table" "RT" {
   }
 }
 
-# Associate Route Table
+# Route Table Association
 resource "aws_route_table_association" "rta1" {
   subnet_id      = aws_subnet.sub1.id
   route_table_id = aws_route_table.RT.id
@@ -55,17 +54,17 @@ resource "aws_security_group" "webSg" {
   vpc_id = aws_vpc.myvpc.id
 
   ingress {
-    description = "Allow HTTP"
-    from_port   = 80
-    to_port     = 80
+    description = "Allow SSH"
+    from_port   = 22
+    to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
-    description = "Allow SSH"
-    from_port   = 22
-    to_port     = 22
+    description = "Allow HTTP"
+    from_port   = 80
+    to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -78,9 +77,9 @@ resource "aws_security_group" "webSg" {
   }
 }
 
-# EC2 Instance (Ubuntu)
+# EC2 Instance
 resource "aws_instance" "server" {
-  ami                         = "ami-0261755bbcb8c4a84" # Ubuntu AMI
+  ami                         = "ami-0261755bbcb8c4a84"
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.example.key_name
   subnet_id                   = aws_subnet.sub1.id
@@ -91,61 +90,53 @@ resource "aws_instance" "server" {
     Name = "UbuntuServer"
   }
 
-#   connection {
-#     type        = "ssh"
-#     user        = "ubuntu"                          # ✅ Correct for Ubuntu AMIs
-#     private_key = file("~/.ssh/id_ed25519")          # Path to private key
-#     host        = self.public_ip  #or we can use aws_instance.server.public_ip
-#     timeout     = "2m"
-#   }
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file("C:/Users/nvn/.ssh/id_ed25519.pub")
+    host        = self.public_ip
+    timeout     = "2m"
+  }
 
-#   provisioner "file" {
-#     source      = "file10"
-#     destination = "/home/ubuntu/file10" #destination path on the remote instance copy the file10 from local to remote instance with the name file10
-#   }
+  # Copy local file to remote server
+  provisioner "file" {
+    source      = "file10"
+    destination = "/home/ubuntu/file10"
+  }
 
-#   provisioner "remote-exec" {
-#     inline = [
-#       "touch /home/ubuntu/file200",
-#       "echo 'hello from veera devops nareshit' >> /home/ubuntu/file200"
-#     ]
-#   }
-#    provisioner "local-exec" {
-#     command = "touch file500" 
-    
-   
-#  }
- }
-resource "null_resource" "run_script" {
+  # Execute commands on remote server
   provisioner "remote-exec" {
-    connection {
-      host        = aws_instance.server.public_ip
-      user        = "ubuntu"
-      private_key = file("~/.ssh/id_ed25519")
-    }
-#      provisioner "file" {
-#     source      = "file10"
-#     destination = "/home/ubuntu/dev.sh" #destination path on the remote instance copy the file10 from local to remote instance with the name file10
-#   }
-
-
     inline = [
-      "echo 'hello from veera Nareshit' >> /home/ubuntu/file200",
-      
-        #"bash /home/ubuntu/dev.sh" # Assuming test.sh is already on the instance 
+      "touch /home/ubuntu/file200",
+      "echo 'hello from veera devops nareshit' >> /home/ubuntu/file200"
+    ]
+  }
+
+  # Optional local-exec
+  # provisioner "local-exec" {
+  #   command = "touch file500"
+  # }
+}
+
+# Null Resource to run commands again without recreating EC2
+resource "null_resource" "run_script" {
+
+  depends_on = [aws_instance.server]
+
+  connection {
+    type        = "ssh"
+    host        = aws_instance.server.public_ip
+    user        = "ubuntu"
+    private_key = file("C:/Users/nvn/.ssh/id_ed25519")
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "echo 'hello from veera Nareshit' >> /home/ubuntu/file200"
     ]
   }
 
   triggers = {
-    always_run = "${timestamp()}" # This will ensure the provisioner runs every time you apply, as the timestamp will always change.
+    always_run = timestamp()
   }
-#   triggers = {
-#   script_hash = filemd5("dev.sh") # Rerun only if script changes
-# }
 }
-
-
-#Solution-2 to Re-Run the Provisioner
-#Use terraform taint to manually mark the resource for recreation:
-# terraform taint aws_instance.server
-# terraform apply
