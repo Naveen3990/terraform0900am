@@ -85,6 +85,11 @@ resource "aws_instance" "server" {
   subnet_id                   = aws_subnet.sub1.id
   vpc_security_group_ids      = [aws_security_group.webSg.id]
   associate_public_ip_address = true
+#   user_data = <<-EOF
+#               #!/bin/bash
+#               sudo apt update -
+#               sudo apt install -y mysql-client
+#               EOF
 
   tags = {
     Name = "UbuntuServer"
