@@ -13,7 +13,7 @@ data "aws_security_group" "selected" {
 }
 
 resource "aws_instance" "name" {
-    ami           = "ami-00e801948462f718a"
+    ami           = data.aws_ami.amzlinux-backend.id
     instance_type = "t2.micro"
     subnet_id = data.aws_subnet.selected.id #use the id of the fetched subnet
     vpc_security_group_ids = [data.aws_security_group.selected.id] #use the id of the fetched security group
@@ -23,3 +23,23 @@ resource "aws_instance" "name" {
   
 }
 
+data "aws_ami" "amzlinux-backend" {
+  most_recent = true
+  owners = [ "amazon" ]
+  filter {
+    name = "name"
+    values = [ "amzn2-ami-hvm-*-gp2" ]
+  }
+             filter {
+    name = "root-device-type"
+    values = [ "ebs" ]
+  }
+        filter {
+    name = "virtualization-type"
+    values = [ "hvm" ]
+  }
+  filter {
+    name = "architecture"
+    values = [ "x86_64" ]
+  }
+}
